@@ -7,10 +7,11 @@ const APP_USER = process.env.APP_USER;
 const APP_PASS = process.env.APP_PASS;
 const URL_BASE = process.env.URL_BASE;
 
-const sendEmail = async (email) => {
+const sendEmail = async (email, rol) => {
   try {
     const token = await jwt.sign({
-      email
+      email,
+      rol
     }, SECRET_JWT, { expiresIn: 60 * 30 });
 
 

@@ -13,14 +13,16 @@ const getUrlToken = async (req, res) => {
       return res.status(400).json({ ok: false, message: "Token Inválido" });
     }
 
-    const response = await pool.query("SELECT * FROM paciente WHERE email = $1;", [verify.email]);
+    console.log("verify", verify);
+
+    const response = await pool.query(`SELECT * FROM ${verify.rol} WHERE email = $1;`, [verify.email]);
     if (response.rows.length === 0) {
       return res.status(400).json({ ok: false, message: "El usuario no existe" });
     }
 
     // Se actualiza el status del usuario.
     const status = "VALIDO";
-    const queryUpdate = await pool.query("UPDATE paciente SET status = $1 WHERE email = $2;", [status, verify.email]);
+    const queryUpdate = await pool.query(`UPDATE ${verify.rol} SET status = $1 WHERE email = $2;`, [status, verify.email]);
 
 
     res.status(200).json({ ok: true, message: "Su cuenta ha sido confirmada satisfactoriamente" });

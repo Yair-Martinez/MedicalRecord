@@ -5,15 +5,9 @@ const sendEmail = require('../helpers/mailerService');
 
 const SECRET_JWT = process.env.SECRET_JWT;
 
-const getPacientes = async (req, res) => {
+const getHospitales = async (req, res) => {
   try {
-    /* const ver = await jwt.verify(req.token, SECRET_JWT);
-
-    if (!ver) {
-      return res.status(403).json({ message: "Sin Authorización" });
-    } */
-
-    const response = await pool.query("SELECT * FROM paciente;");
+    const response = await pool.query("SELECT * FROM hospital;");
 
     res.status(200).json({ ok: true, data: response.rows });
 
@@ -23,26 +17,26 @@ const getPacientes = async (req, res) => {
   }
 }
 
-// Creador de nuevos pacientes.
-const createPaciente = async (req, res) => {
+// Creador de nuevos hospitales.
+const createHospital = async (req, res) => {
   try {
     const { identificacion, email, password, telefono } = req.body;
-    const rol = "paciente";
+    const rol = "hospital";
     const status = "INVALIDO";
 
-    const consultaId = await pool.query("SELECT * FROM paciente WHERE identificacion = $1", [identificacion]);
+    const consultaId = await pool.query("SELECT * FROM hospital WHERE identificacion = $1", [identificacion]);
     if (consultaId.rows.length !== 0) {
       return res.status(400).json({ ok: false, message: "El usuario ya se encuentra registrado" });
     }
 
-    const consultaEmail = await pool.query("SELECT * FROM paciente WHERE email = $1", [email]);
+    const consultaEmail = await pool.query("SELECT * FROM hospital WHERE email = $1", [email]);
     if (consultaEmail.rows.length !== 0) {
       return res.status(400).json({ ok: false, message: "El email ya se encuentra registrado" });
     }
 
     // Escriptar pass.
     const passHash = await bcryptService.encrypt(password);
-    const response = await pool.query(`INSERT INTO paciente (identificacion, email, password, telefono, rol, status) VALUES ('${identificacion}', '${email}', '${passHash}', '${telefono}', '${rol}', '${status}');`);
+    const response = await pool.query(`INSERT INTO hospital (identificacion, email, password, telefono, rol, status) VALUES ('${identificacion}', '${email}', '${passHash}', '${telefono}', '${rol}', '${status}');`);
 
     await sendEmail(email, rol);
 
@@ -54,12 +48,12 @@ const createPaciente = async (req, res) => {
   }
 }
 
-// Manejador de inicio de sesión de los pacientes.
-const loginPaciente = async (req, res) => {
+// Manejador de inicio de sesión de los hospitales.
+const loginHospital = async (req, res) => {
   try {
     const { identificacion, password } = req.body;
 
-    const response = await pool.query("SELECT * FROM paciente WHERE identificacion = $1", [identificacion]);
+    const response = await pool.query("SELECT * FROM hospital WHERE identificacion = $1", [identificacion]);
 
     if (response.rows.length === 0) {
       return res.status(401).json({ ok: false, message: "Credenciales inválidas" });
@@ -93,13 +87,13 @@ const loginPaciente = async (req, res) => {
   }
 }
 
-// Función que agrega los datos adicionales del paciente una vez completado el registro.
-const addDataPaciente = async (req, res) => {
+// Función que agrega los datos adicionales del hospital una vez completado el registro.
+const addDataHospital = async (req, res) => {
   try {
     const identificacion = req.params.id;
-    const { nombre, direccion, fechaNacimiento } = req.body;
+    const { nombre, direccion, servicioMedico } = req.body;
 
-    const queryId = await pool.query("SELECT * FROM paciente WHERE identificacion = $1", [identificacion]);
+    const queryId = await pool.query("SELECT * FROM hospital WHERE identificacion = $1", [identificacion]);
     if (queryId.rows.length === 0) {
       return res.status(401).json({ ok: false, message: "El usuario no existe" });
     }
@@ -109,7 +103,7 @@ const addDataPaciente = async (req, res) => {
       return res.status(403).json({ ok: false, message: "Sin Autorización" });
     }
 
-    const response = await pool.query("UPDATE paciente SET nombre = $1, direccion = $2, fecha_nacimiento = $3 WHERE identificacion = $4;", [nombre, direccion, fechaNacimiento, identificacion]);
+    const response = await pool.query("UPDATE hospital SET nombre = $1, direccion = $2, servicio_medico = $3 WHERE identificacion = $4;", [nombre, direccion, servicioMedico, identificacion]);
 
     res.status(200).json({ ok: true, message: "Se han actualizado los datos correctamente" });
 
@@ -133,9 +127,9 @@ const checkToken = async (req, res, next) => {
 }
 
 module.exports = {
-  getPacientes,
-  createPaciente,
-  loginPaciente,
-  addDataPaciente,
+  getHospitales,
+  createHospital,
+  loginHospital,
+  addDataHospital,
   checkToken
 }
