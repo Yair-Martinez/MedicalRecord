@@ -37,7 +37,11 @@ const createHospital = async (req, res) => {
 
     // Escriptar pass.
     const passHash = await bcryptService.encrypt(password);
-    const response = await pool.query(`INSERT INTO hospital (identificacion, email, password, telefono, rol, status) VALUES ('${identificacion}', '${email}', '${passHash}', '${telefono}', '${rol}', '${status}');`);
+
+    const response = await pool.query(`INSERT INTO hospital 
+    (identificacion, email, password, telefono, rol, status) 
+    VALUES ($1, $2, $3, $4, $5, $6);`,
+      [identificacion, email, passHash, telefono, rol, status]);
 
     await sendEmail(email, rol, "confirm");
 
@@ -98,7 +102,8 @@ const addDataHospital = async (req, res) => {
       return res.status(401).json({ ok: false, message: "El usuario no existe" });
     }
 
-    const response = await pool.query("UPDATE hospital SET nombre = $1, direccion = $2, servicio_medico = $3 WHERE identificacion = $4;", [nombre, direccion, servicioMedico, identificacion]);
+    const response = await pool.query("UPDATE hospital SET nombre = $1, direccion = $2, servicio_medico = $3 WHERE identificacion = $4;",
+      [nombre, direccion, servicioMedico, identificacion]);
 
     res.status(200).json({ ok: true, message: "Se han actualizado los datos correctamente" });
 
@@ -111,7 +116,7 @@ const addDataHospital = async (req, res) => {
 // Registra un nuevo Médico al Hospital.
 const createMedico = async (req, res) => {
   try {
-    const { identificacion, email, password, telefono } = req.body;
+    const { identificacion, nombre, email, password, telefono, direccion } = req.body;
     const rol = "medico";
     const status = "NEW";
 
@@ -127,9 +132,17 @@ const createMedico = async (req, res) => {
 
     // Escriptar pass.
     const passHash = await bcryptService.encrypt(password);
-    const response = await pool.query(`INSERT INTO medico (identificacion, email, password, telefono, rol, status) VALUES ('${identificacion}', '${email}', '${passHash}', '${telefono}', '${rol}', '${status}');`);
 
-    res.status(200).json({ ok: true, message: "El usuario ha sido creado", body: { identificacion, email, telefono } });
+    const response = await pool.query(`INSERT INTO medico 
+    (identificacion, nombre, email, password, telefono, direccion, rol, status) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`,
+      [identificacion, nombre, email, passHash, telefono, direccion, rol, status]);
+
+    res.status(200).json({
+      ok: true,
+      message: "El usuario ha sido creado",
+      body: { identificacion, nombre, email, telefono }
+    });
 
   } catch (error) {
     console.error(error);

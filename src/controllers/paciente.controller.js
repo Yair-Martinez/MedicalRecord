@@ -37,7 +37,11 @@ const createPaciente = async (req, res) => {
 
     // Escriptar pass.
     const passHash = await bcryptService.encrypt(password);
-    const response = await pool.query(`INSERT INTO paciente (identificacion, email, password, telefono, rol, status) VALUES ('${identificacion}', '${email}', '${passHash}', '${telefono}', '${rol}', '${status}');`);
+
+    const response = await pool.query(`INSERT INTO paciente 
+    (identificacion, email, password, telefono, rol, status) 
+    VALUES ($1, $2, $3, $4, $5, $6);`,
+      [identificacion, email, passHash, telefono, rol, status]);
 
     await sendEmail(email, rol, "confirm");
 
