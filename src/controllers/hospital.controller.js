@@ -5,6 +5,7 @@ const sendEmail = require('../helpers/mailerService');
 
 const SECRET_JWT = process.env.SECRET_JWT;
 
+// Lista todos los usuarios de tipo Hospital.
 const getHospitales = async (req, res) => {
   try {
     const response = await pool.query("SELECT * FROM hospital;");
@@ -38,7 +39,7 @@ const createHospital = async (req, res) => {
     const passHash = await bcryptService.encrypt(password);
     const response = await pool.query(`INSERT INTO hospital (identificacion, email, password, telefono, rol, status) VALUES ('${identificacion}', '${email}', '${passHash}', '${telefono}', '${rol}', '${status}');`);
 
-    await sendEmail(email, rol);
+    await sendEmail(email, rol, "confirm");
 
     res.status(200).json({ ok: true, message: "El usuario ha sido creado", body: { identificacion, email, telefono } });
 
@@ -73,10 +74,9 @@ const loginHospital = async (req, res) => {
 
     // Retornar un token.
     const token = await jwt.sign({
-      data: {
-        identificacion: user.identificacion,
-        email: user.email
-      }
+      identificacion: user.identificacion,
+      email: user.email,
+      rol: user.rol
     }, SECRET_JWT, { expiresIn: 60 * 60 });
 
     return res.status(200).json({ ok: true, token });
@@ -98,11 +98,6 @@ const addDataHospital = async (req, res) => {
       return res.status(401).json({ ok: false, message: "El usuario no existe" });
     }
 
-    const verify = await jwt.verify(req.token, SECRET_JWT);
-    if (!verify) {
-      return res.status(403).json({ ok: false, message: "Sin Autorización" });
-    }
-
     const response = await pool.query("UPDATE hospital SET nombre = $1, direccion = $2, servicio_medico = $3 WHERE identificacion = $4;", [nombre, direccion, servicioMedico, identificacion]);
 
     res.status(200).json({ ok: true, message: "Se han actualizado los datos correctamente" });
@@ -113,14 +108,51 @@ const addDataHospital = async (req, res) => {
   }
 }
 
+// Registra un nuevo Médico al Hospital.
+const createMedico = async (req, res) => {
+  try {
+    const { identificacion, email, password, telefono } = req.body;
+    const rol = "medico";
+    const status = "NEW";
+
+    const consultaId = await pool.query("SELECT * FROM medico WHERE identificacion = $1", [identificacion]);
+    if (consultaId.rows.length !== 0) {
+      return res.status(400).json({ ok: false, message: "El usuario ya se encuentra registrado" });
+    }
+
+    const consultaEmail = await pool.query("SELECT * FROM medico WHERE email = $1", [email]);
+    if (consultaEmail.rows.length !== 0) {
+      return res.status(400).json({ ok: false, message: "El email ya se encuentra registrado" });
+    }
+
+    // Escriptar pass.
+    const passHash = await bcryptService.encrypt(password);
+    const response = await pool.query(`INSERT INTO medico (identificacion, email, password, telefono, rol, status) VALUES ('${identificacion}', '${email}', '${passHash}', '${telefono}', '${rol}', '${status}');`);
+
+    res.status(200).json({ ok: true, message: "El usuario ha sido creado", body: { identificacion, email, telefono } });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+}
+
 // Middleware que comprueba si el usuario se encuentra logueado.
-const checkToken = async (req, res, next) => {
+const checkTokenHospital = async (req, res, next) => {
   const bearerHeader = req.headers['authorization'];
 
   if (typeof bearerHeader !== 'undefined') {
     const bearerToken = bearerHeader.split(" ")[1];
     req.token = bearerToken;
-    return next();
+
+    try {
+      const verify = await jwt.verify(req.token, SECRET_JWT);
+      return verify.rol === "hospital" ? next() : res.sendStatus(403);
+
+    } catch (error) {
+      console.error(error);
+      return res.status(403).json({ ok: false, message: "Sin autorización", error: error.message });
+    }
   }
 
   res.sendStatus(403);
@@ -131,5 +163,6 @@ module.exports = {
   createHospital,
   loginHospital,
   addDataHospital,
-  checkToken
+  createMedico,
+  checkTokenHospital
 }

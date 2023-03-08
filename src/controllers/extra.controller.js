@@ -1,31 +1,26 @@
 const pool = require('../config/database');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../helpers/mailerService');
+const bcryptService = require('../helpers/bcryptService');
 
 const SECRET_JWT = process.env.SECRET_JWT;
 
-// Obtiene el token que se le envió al usuario por medio de su correo y procede a verificar la cuenta.
-const getUrlToken = async (req, res) => {
+// Confirma la cuenta registrada para poder iniciar sesión.
+const confirmAccount = async (req, res) => {
   try {
-    const token = req.params.token;
+    const tokenData = req.tokenData;
 
-    const verify = jwt.verify(token, SECRET_JWT);
-    if (!verify) {
-      return res.status(400).json({ ok: false, message: "Token Inválido" });
-    }
-
-    console.log("verify", verify);
-
-    const response = await pool.query(`SELECT * FROM ${verify.rol} WHERE email = $1;`, [verify.email]);
+    const response = await pool.query(`SELECT * FROM ${tokenData.rol} WHERE email = $1;`, [tokenData.email]);
     if (response.rows.length === 0) {
       return res.status(400).json({ ok: false, message: "El usuario no existe" });
     }
 
     // Se actualiza el status del usuario.
     const status = "VALIDO";
-    const queryUpdate = await pool.query(`UPDATE ${verify.rol} SET status = $1 WHERE email = $2;`, [status, verify.email]);
+    const queryUpdate = await pool.query(`UPDATE ${tokenData.rol} SET status = $1 WHERE email = $2;`, [status, tokenData.email]);
 
 
-    res.status(200).json({ ok: true, message: "Su cuenta ha sido confirmada satisfactoriamente" });
+    res.status(200).json({ ok: true, message: "Su cuenta ha sido activada satisfactoriamente" });
 
   } catch (error) {
     console.error(error.message);
@@ -33,4 +28,66 @@ const getUrlToken = async (req, res) => {
   }
 }
 
-module.exports = { getUrlToken };
+// Obtiene el email del usuario que desee cambiar su contraseña y le envía un correo para iniciar el proceso.
+const forgotPassword = async (req, res) => {
+  try {
+    const { email, rol } = req.body;
+    console.log(req.body);
+
+    // Valida la existencia del email.
+    const query = await pool.query(`SELECT * FROM ${rol} WHERE email = $1;`, [email]);
+    if (query.rows.length === 0) {
+      return res.status(400).json({ ok: false, message: "El usuario no existe" });
+    }
+
+    sendEmail(email, rol, "reset");
+
+    res.status(200).json({ ok: true, message: `Se ha enviado un correo de confirmación` });
+
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ ok: false, error: error.message });
+  }
+}
+
+// Actualiza la nueva contraseña del usuario.
+const changePassword = async (req, res) => {
+  try {
+    const password = req.body.password;
+    const { email, rol } = req.tokenData;
+    console.log(req.tokenData);
+
+    const passHash = await bcryptService.encrypt(password);
+
+    const queryUpdate = await pool.query(`UPDATE ${rol} SET password = $1 WHERE email = $2;`, [passHash, email]);
+    res.status(200).json({ ok: true, message: "Su contraseña ha sido actualizada" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ ok: false, error: error.message });
+  }
+}
+
+// Middleware que comprueba si el Token es válido.
+const checkToken = async (req, res, next) => {
+  try {
+    const token = req.params.token;
+
+    const verify = jwt.verify(token, SECRET_JWT);
+    console.log("verify", verify);
+    req.tokenData = { email: verify.email, rol: verify.rol };
+
+    return next();
+
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json({ ok: false, error: error.message });
+  }
+}
+
+module.exports = {
+  confirmAccount,
+  forgotPassword,
+  changePassword,
+  checkToken
+};

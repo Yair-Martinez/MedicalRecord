@@ -1,13 +1,15 @@
 const nodemailer = require("nodemailer");
 const jwt = require('jsonwebtoken');
-const getTemplate = require("../utils/emailTemplate.js");
+const getConfirmTemplate = require("../utils/confirmTemplate.js");
+const getResetTemplate = require("../utils/resetTemplate.js");
 
 const SECRET_JWT = process.env.SECRET_JWT;
 const APP_USER = process.env.APP_USER;
 const APP_PASS = process.env.APP_PASS;
 const URL_BASE = process.env.URL_BASE;
 
-const sendEmail = async (email, rol) => {
+// Envía correos precreados con un link unido a un token para poder validar procesos.
+const sendEmail = async (email, rol, tipoEmail) => {
   try {
     const token = await jwt.sign({
       email,
@@ -25,13 +27,14 @@ const sendEmail = async (email, rol) => {
       },
     });
 
-    const link = URL_BASE + "/confirm/" + token;
+    const linkConfirm = URL_BASE + "/confirm/" + token;
+    const linkReset = URL_BASE + "/change-password/" + token;
 
     const info = await transporter.sendMail({
-      from: `"Verificador 🔐" <${APP_USER}>`, // sender address
+      from: `"🔐 Service Account 🔐" <${APP_USER}>`, // sender address
       to: email, // list of receivers
-      subject: "Verificación de la cuenta", // Subject line
-      html: getTemplate(link), // html body
+      subject: tipoEmail === "confirm" ? "Verificación de la cuenta" : "Reinicio de la contraseña", // Subject line
+      html: tipoEmail === "confirm" ? getConfirmTemplate(linkConfirm) : getResetTemplate(linkReset) // html body
     });
 
     console.log("El mensaje ha sido enviado: %s", info.messageId);

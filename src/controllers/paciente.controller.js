@@ -5,14 +5,9 @@ const sendEmail = require('../helpers/mailerService');
 
 const SECRET_JWT = process.env.SECRET_JWT;
 
+// Lista todos los usuarios de tipo Paciente.
 const getPacientes = async (req, res) => {
   try {
-    /* const ver = await jwt.verify(req.token, SECRET_JWT);
-
-    if (!ver) {
-      return res.status(403).json({ message: "Sin Authorización" });
-    } */
-
     const response = await pool.query("SELECT * FROM paciente;");
 
     res.status(200).json({ ok: true, data: response.rows });
@@ -44,7 +39,7 @@ const createPaciente = async (req, res) => {
     const passHash = await bcryptService.encrypt(password);
     const response = await pool.query(`INSERT INTO paciente (identificacion, email, password, telefono, rol, status) VALUES ('${identificacion}', '${email}', '${passHash}', '${telefono}', '${rol}', '${status}');`);
 
-    await sendEmail(email, rol);
+    await sendEmail(email, rol, "confirm");
 
     res.status(200).json({ ok: true, message: "El usuario ha sido creado", body: { identificacion, email, telefono } });
 
@@ -79,10 +74,9 @@ const loginPaciente = async (req, res) => {
 
     // Retornar un token.
     const token = await jwt.sign({
-      data: {
-        identificacion: user.identificacion,
-        email: user.email
-      }
+      identificacion: user.identificacion,
+      email: user.email,
+      rol: user.rol
     }, SECRET_JWT, { expiresIn: 60 * 60 });
 
     return res.status(200).json({ ok: true, token });
@@ -104,11 +98,6 @@ const addDataPaciente = async (req, res) => {
       return res.status(401).json({ ok: false, message: "El usuario no existe" });
     }
 
-    const verify = await jwt.verify(req.token, SECRET_JWT);
-    if (!verify) {
-      return res.status(403).json({ ok: false, message: "Sin Autorización" });
-    }
-
     const response = await pool.query("UPDATE paciente SET nombre = $1, direccion = $2, fecha_nacimiento = $3 WHERE identificacion = $4;", [nombre, direccion, fechaNacimiento, identificacion]);
 
     res.status(200).json({ ok: true, message: "Se han actualizado los datos correctamente" });
@@ -120,13 +109,21 @@ const addDataPaciente = async (req, res) => {
 }
 
 // Middleware que comprueba si el usuario se encuentra logueado.
-const checkToken = async (req, res, next) => {
+const checkTokenPaciente = async (req, res, next) => {
   const bearerHeader = req.headers['authorization'];
 
   if (typeof bearerHeader !== 'undefined') {
     const bearerToken = bearerHeader.split(" ")[1];
     req.token = bearerToken;
-    return next();
+
+    try {
+      const verify = await jwt.verify(req.token, SECRET_JWT);
+      return verify.rol === "paciente" ? next() : res.sendStatus(403);
+
+    } catch (error) {
+      console.error(error);
+      return res.status(403).json({ ok: false, message: "Sin autorización", error: error.message });
+    }
   }
 
   res.sendStatus(403);
@@ -137,5 +134,5 @@ module.exports = {
   createPaciente,
   loginPaciente,
   addDataPaciente,
-  checkToken
+  checkTokenPaciente
 }
