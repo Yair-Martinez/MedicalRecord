@@ -1,10 +1,10 @@
 const pool = require('../config/database');
 const bcryptService = require('../helpers/bcryptService');
 const jwt = require('jsonwebtoken');
-const sendEmail = require('../helpers/mailerService');
 
 const SECRET_JWT = process.env.SECRET_JWT;
 
+// Lista todos los usuarios de tipo Médico.
 const getMedicos = async (req, res) => {
   try {
     const response = await pool.query("SELECT * FROM medico;");
@@ -36,10 +36,6 @@ const loginMedico = async (req, res) => {
       return res.status(401).json({ ok: false, message: "Credenciales inválidas" });
     }
 
-    if (user.status === "NEW") {
-      return res.status(403).json({ ok: false, message: "Su cuenta aún no ha sido verificada. Por favor ingrese a su correo para poder continuar con el inicio de sesión" });
-    }
-
     // Retornar un token.
     const token = await jwt.sign({
       identificacion: user.identificacion,
@@ -55,20 +51,38 @@ const loginMedico = async (req, res) => {
   }
 }
 
-// Función que agrega los datos adicionales del médico una vez completado el registro.
-const addDataMedico = async (req, res) => {
+// Función que crea as observaciones médicas hechas a los pacientes.
+const createObservacion = async (req, res) => {
   try {
-    const identificacion = req.params.id;
-    const { nombre, direccion, fechaNacimiento } = req.body;
+    const { especialidadMedica, estadoSalud, detalle, idHospital, idMedico, idPaciente } = req.body;
 
-    const queryId = await pool.query("SELECT * FROM medico WHERE identificacion = $1", [identificacion]);
-    if (queryId.rows.length === 0) {
-      return res.status(401).json({ ok: false, message: "El usuario no existe" });
-    }
+    const queryObservacion = await pool.query(`INSERT INTO observacion 
+    (especialidad_medica, estado_salud, detalle, id_hospital, id_medico, id_paciente) 
+    VALUES ($1, $2, $3, $4, $5, $6);`,
+      [especialidadMedica, estadoSalud, detalle, idHospital, idMedico, idPaciente]);
 
-    const response = await pool.query("UPDATE medico SET nombre = $1, direccion = $2, fecha_nacimiento = $3 WHERE identificacion = $4;", [nombre, direccion, fechaNacimiento, identificacion]);
+    res.status(200).json({
+      ok: true,
+      message: "Observación médica ha sido creada",
+      body: { especialidadMedica, estadoSalud, detalle }
+    });
 
-    res.status(200).json({ ok: true, message: "Se han actualizado los datos correctamente" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+}
+
+// Obtiene todas las observaciones hechas por el médico en cuestión.
+const getObservaciones = async (req, res) => {
+  try {
+    const token = req.token;
+    const dataToken = jwt.verify(token, SECRET_JWT);
+
+    const queryObservacion = await pool.query("SELECT * FROM observacion WHERE id_medico = $1;",
+      [dataToken.identificacion]);
+
+    res.status(200).json({ ok: true, data: queryObservacion.rows });
 
   } catch (error) {
     console.error(error);
@@ -100,6 +114,7 @@ const checkTokenMedico = async (req, res, next) => {
 module.exports = {
   getMedicos,
   loginMedico,
-  addDataMedico,
+  createObservacion,
+  getObservaciones,
   checkTokenMedico
 }

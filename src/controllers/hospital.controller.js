@@ -38,14 +38,18 @@ const createHospital = async (req, res) => {
     // Escriptar pass.
     const passHash = await bcryptService.encrypt(password);
 
-    const response = await pool.query(`INSERT INTO hospital 
+    const queryCreate = await pool.query(`INSERT INTO hospital 
     (identificacion, email, password, telefono, rol, status) 
     VALUES ($1, $2, $3, $4, $5, $6);`,
       [identificacion, email, passHash, telefono, rol, status]);
 
     await sendEmail(email, rol, "confirm");
 
-    res.status(200).json({ ok: true, message: "El usuario ha sido creado", body: { identificacion, email, telefono } });
+    res.status(200).json({
+      ok: true,
+      message: "El usuario ha sido creado",
+      body: { identificacion, email, telefono }
+    });
 
   } catch (error) {
     console.error(error);
@@ -150,6 +154,23 @@ const createMedico = async (req, res) => {
   }
 }
 
+// Obtiene todas las observaciones hechas por el hospital en cuestión.
+const getObservaciones = async (req, res) => {
+  try {
+    const token = req.token;
+    const dataToken = jwt.verify(token, SECRET_JWT);
+
+    const queryObservacion = await pool.query("SELECT * FROM observacion WHERE id_hospital = $1;",
+      [dataToken.identificacion]);
+
+    res.status(200).json({ ok: true, data: queryObservacion.rows });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+}
+
 // Middleware que comprueba si el usuario se encuentra logueado.
 const checkTokenHospital = async (req, res, next) => {
   const bearerHeader = req.headers['authorization'];
@@ -177,5 +198,6 @@ module.exports = {
   loginHospital,
   addDataHospital,
   createMedico,
+  getObservaciones,
   checkTokenHospital
 }

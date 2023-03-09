@@ -102,9 +102,28 @@ const addDataPaciente = async (req, res) => {
       return res.status(401).json({ ok: false, message: "El usuario no existe" });
     }
 
-    const response = await pool.query("UPDATE paciente SET nombre = $1, direccion = $2, fecha_nacimiento = $3 WHERE identificacion = $4;", [nombre, direccion, fechaNacimiento, identificacion]);
+    const response = await pool.query("UPDATE paciente SET nombre = $1, direccion = $2, fecha_nacimiento = $3 WHERE identificacion = $4;",
+      [nombre, direccion, fechaNacimiento, identificacion]);
 
     res.status(200).json({ ok: true, message: "Se han actualizado los datos correctamente" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+}
+
+// Obtiene todas las observaciones vinculadas al paciente en cuestión.
+const getObservaciones = async (req, res) => {
+  try {
+    const token = req.token;
+    const dataToken = jwt.verify(token, SECRET_JWT);
+    console.log(dataToken);
+
+    const queryObservacion = await pool.query("SELECT * FROM observacion WHERE id_paciente = $1;",
+      [dataToken.identificacion]);
+
+    res.status(200).json({ ok: true, data: queryObservacion.rows });
 
   } catch (error) {
     console.error(error);
@@ -138,5 +157,6 @@ module.exports = {
   createPaciente,
   loginPaciente,
   addDataPaciente,
+  getObservaciones,
   checkTokenPaciente
 }
