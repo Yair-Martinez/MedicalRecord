@@ -1,6 +1,7 @@
 const pool = require('../config/database');
-const bcryptService = require('../helpers/bcryptService');
+const bcryptService = require('../services/bcryptService');
 const jwt = require('jsonwebtoken');
+const generatePDF = require('../services/pdfService');
 
 const SECRET_JWT = process.env.SECRET_JWT;
 
@@ -79,10 +80,13 @@ const getObservaciones = async (req, res) => {
     const token = req.token;
     const dataToken = jwt.verify(token, SECRET_JWT);
 
-    const queryObservacion = await pool.query("SELECT * FROM observacion WHERE id_medico = $1;",
+    const queryObservacion = await pool.query(`SELECT id, especialidad_medica, estado_salud, detalle, o.id_medico, p.nombre AS nombre_paciente, h.nombre AS nombre_hospital, m.nombre AS nombre_medico FROM observacion o INNER JOIN paciente p ON o.id_paciente = p.identificacion INNER JOIN hospital h ON o.id_hospital = h.identificacion INNER JOIN medico m ON o.id_medico = m.identificacion WHERE o.id_medico = $1;`,
       [dataToken.identificacion]);
 
-    res.status(200).json({ ok: true, data: queryObservacion.rows });
+    await generatePDF(queryObservacion.rows, dataToken.identificacion);
+    const rutaPDF = appRoot + `/pdfs/Observaciones-${dataToken.identificacion}.pdf`;
+
+    res.status(200).sendFile(rutaPDF);
 
   } catch (error) {
     console.error(error);

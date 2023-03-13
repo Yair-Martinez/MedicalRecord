@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 const jwt = require('jsonwebtoken');
-const sendEmail = require('../helpers/mailerService');
-const bcryptService = require('../helpers/bcryptService');
+const sendEmail = require('../services/mailerService');
+const bcryptService = require('../services/bcryptService');
 
 const SECRET_JWT = process.env.SECRET_JWT;
 
