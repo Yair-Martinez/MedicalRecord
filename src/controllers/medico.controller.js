@@ -115,10 +115,35 @@ const checkTokenMedico = async (req, res, next) => {
   res.sendStatus(403);
 }
 
+const checkerChangePassword = async (req, res, next) => {
+  try {
+    const token = req.token;
+    const dataToken = jwt.verify(token, SECRET_JWT);
+
+    const query = await pool.query("SELECT * FROM medico WHERE identificacion = $1",
+      [dataToken.identificacion]);
+
+    const user = query.rows[0];
+    if (user.status === "NEW") {
+      return res.status(400).json({
+        ok: false,
+        message: "Actualice su contraseña temporal para poder continuar"
+      });
+    }
+
+    return next();
+
+  } catch (error) {
+    console.error(error);
+    return res.status(403).json({ ok: false, error: error.message });
+  }
+}
+
 module.exports = {
   getMedicos,
   loginMedico,
   createObservacion,
   getObservaciones,
-  checkTokenMedico
+  checkTokenMedico,
+  checkerChangePassword
 }

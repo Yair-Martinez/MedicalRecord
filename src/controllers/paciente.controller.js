@@ -126,7 +126,6 @@ const getObservaciones = async (req, res) => {
 
     await generatePDF(queryObservacion.rows, dataToken.identificacion);
     const rutaPDF = appRoot + `/pdfs/Observaciones-${dataToken.identificacion}.pdf`;
-    console.log(rutaPDF);
 
     res.status(200).sendFile(rutaPDF);
 

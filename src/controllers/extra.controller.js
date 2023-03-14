@@ -32,7 +32,6 @@ const confirmAccount = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email, rol } = req.body;
-    console.log(req.body);
 
     // Valida la existencia del email.
     const query = await pool.query(`SELECT * FROM ${rol} WHERE email = $1;`, [email]);
@@ -55,12 +54,17 @@ const changePassword = async (req, res) => {
   try {
     const password = req.body.password;
     const { email, rol } = req.tokenData;
-    console.log(req.tokenData);
 
     const passHash = await bcryptService.encrypt(password);
 
-    const queryUpdate = await pool.query(`UPDATE ${rol} SET password = $1 WHERE email = $2;`, [passHash, email]);
-    res.status(200).json({ ok: true, message: "Su contraseña ha sido actualizada" });
+    if (rol === "medico") {
+      const status = "VALIDO";
+      const queryUpdate = await pool.query(`UPDATE ${rol} SET password = $1, status = $2 WHERE email = $3;`, [passHash, status, email]);
+      res.status(200).json({ ok: true, message: "Su contraseña ha sido actualizada" });
+    } else {
+      const queryUpdate = await pool.query(`UPDATE ${rol} SET password = $1 WHERE email = $2;`, [passHash, email]);
+      res.status(200).json({ ok: true, message: "Su contraseña ha sido actualizada" });
+    }
 
   } catch (error) {
     console.error(error);
@@ -72,9 +76,8 @@ const changePassword = async (req, res) => {
 const checkToken = async (req, res, next) => {
   try {
     const token = req.params.token;
-
     const verify = jwt.verify(token, SECRET_JWT);
-    console.log("verify", verify);
+    
     req.tokenData = { email: verify.email, rol: verify.rol };
 
     return next();
