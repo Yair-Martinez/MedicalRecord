@@ -24,7 +24,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   POST /api/paciente/registro
 ```
 
-| Body | Tipo     | Descripción                |
+| Body      | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
 | `{identificacion, email, password, telefono}` | `json` | Recibe un objeto *JSON* con los campos necesarios y añade un nuevo paciente a la base de datos. |
 
@@ -34,7 +34,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   POST /api/paciente/login
 ```
 
-| Body | Tipo     | Descripción                |
+| Body      | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
 | `{identificacion, password}` | `json` | Toma las credenciales de acceso del usuario, en caso de ser válidas retorna un token único. |
 
@@ -44,9 +44,9 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   PATCH /api/paciente/agregar/${id}
 ```
 
-| Parámetro | Body     | Token     | Descripción                       |
-| :-------- | :------- | :-------- | :-------------------------------- |
-| `id`      | `{nombre, direccion, fechaNacimiento}` | `app_key` | Recibe tanto un parámetro *id* como un objeto *JSON*, además de un *Token* de acceso (adquirido en la fase de Login) incluido en el header de la petición. En caso de ser válidos se añadirá o actualizará los campos que no fueron introducidos en la fase de registro. |
+| Parámetro | Body     | Header    | Tipo      | Descripción                       |
+| :-------- | :------- | :-------- | :-------- | :-------------------------------- |
+| `id`      | `{nombre, direccion, fechaNacimiento}` | `Authorization` | `string/json/token` | Recibe tanto un parámetro *id* como un objeto *JSON*, además de un *Token* de acceso (adquirido en la fase de Login) incluido en el header de la petición. En caso de ser válidos se añadirá o actualizará los campos que no fueron introducidos en la fase de registro. |
 
 #### Obtener las observaciones médicas del Paciente
 
@@ -54,9 +54,9 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   GET /api/paciente/observaciones
 ```
 
-| Parámetro | Tipo     | Descripción                |
-| :-------- | :------- | :------------------------- |
-| `N/A` | `N/A` | Obtiene un array con todas las observaciones médicas realizadas al paciente. |
+| Parámetro | Header      | Tipo       | Descripción                |
+| :-------- | :---------- | :--------- | :------------------------- |
+| `N/A` | `Authorization` | `token` | Obtiene un array con todas las observaciones médicas realizadas al paciente. |
 
 ***
 
@@ -70,7 +70,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
 
 | Parámetro | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
-| `N/A` | `N/A` | Obtiene un array con todos los hospitales. |
+| `N/A`     | `N/A`    | Obtiene un array con todos los hospitales. |
 
 #### Crear nuevo Hospital
 
@@ -78,7 +78,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   POST /api/hospital/registro
 ```
 
-| Body | Tipo     | Descripción                |
+| Body      | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
 | `{identificacion, email, password, telefono}` | `json` | Recibe un objeto JSON con los campos necesarios y añade un nuevo hospital a la base de datos. |
 
@@ -88,7 +88,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   POST /api/hospital/login
 ```
 
-| Body | Tipo     | Descripción                |
+| Body      | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
 | `{identificacion, password}` | `json` | Toma las credenciales de acceso del usuario, en caso de ser válidas retorna un token único. |
 
@@ -98,9 +98,9 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   PATCH /api/hospital/agregar/${id}
 ```
 
-| Parámetro | Body     | Token     | Descripción                       |
-| :-------- | :------- | :-------- | :-------------------------------- |
-| `id`      | `{nombre, direccion, servicioMedico}` | `app_key` | Recibe tanto un parámetro *id* como un objeto *JSON*, además de un *Token* de acceso (adquirido en la fase de Login) incluido en el header de la petición. En caso de ser válidos se añadirá o actualizará los campos que no fueron introducidos en la fase de registro. |
+| Parámetro | Body     | Header    | Tipo      | Descripción                       |
+| :-------- | :------- | :-------- | :-------- | :-------------------------------- |
+| `id`      | `{nombre, direccion, servicioMedico}` | `Authorization` | `string/json/token` | Recibe tanto un parámetro *id* como un objeto *JSON*, además de un *Token* de acceso (adquirido en la fase de Login) incluido en el header de la petición. En caso de ser válidos se añadirá o actualizará los campos que no fueron introducidos en la fase de registro. |
 
 #### Obtener las observaciones médicas del Hospital 
 
@@ -108,9 +108,9 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   GET /api/hospital/observaciones
 ```
 
-| Parámetro | Tipo     | Descripción                |
-| :-------- | :------- | :------------------------- |
-| `N/A` | `N/A` | Obtiene un array con todas las observaciones médicas realizadas por el hospital. |
+| Parámetro | Header     | Tipo      | Descripción                |
+| :-------- | :--------- | :-------- | :------------------------- |
+| `N/A` | `Authorization` | `token`  | Obtiene un array con todas las observaciones médicas realizadas por el hospital. |
 
 #### Crear un nuevo Médico
 
@@ -118,9 +118,9 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   POST /api/hospital/registro-medico
 ```
 
-| Body | Tipo     | Descripción                |
-| :-------- | :------- | :------------------------- |
-| `{identificacion, nombre, email, password, telefono, direccion}` | `json` | Recibe un objeto JSON con los campos necesarios y añade un nuevo médico a la base de datos. |
+| Body      | Header    | Tipo      | Descripción                |
+| :-------- | :-------- | :-------- | :------------------------- |
+| `{identificacion, nombre, email, password, telefono, direccion}` | `Authorization` | `json/token` | Recibe un objeto JSON con los campos necesarios y añade un nuevo médico a la base de datos. |
 
 ***
 
@@ -153,9 +153,9 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   GET /api/medico/observaciones
 ```
 
-| Parámetro | Tipo     | Descripción                |
-| :-------- | :------- | :------------------------- |
-| `N/A` | `N/A` | Obtiene un array con todas las observaciones realizadas por el médico. |
+| Parámetro | Header     | Tipo      | Descripción                |
+| :-------- | :--------- | :-------- | :------------------------- |
+| `N/A` | `Authorization` | `token`    | Obtiene un array con todas las observaciones realizadas por el médico. |
 
 #### Crear Observaciones médicas 
 
@@ -163,9 +163,9 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   POST /api/medico/observaciones
 ```
 
-| Body | Tipo     | Descripción                |
-| :-------- | :------- | :------------------------- |
-| `{especialidadMedica, estadoSalud, detalle, idHospital, idMedico, idPaciente}` | `json` | Toma un objeto JSON con los campos necesarios y añade una nueva observación médica a la base de datos. |
+| Body      | Header    | Tipo      | Descripción                |
+| :-------- | :-------- | :-------- | :------------------------- |
+| `{especialidadMedica, estadoSalud, detalle, idHospital, idMedico, idPaciente}` | `Authorization` | `json/token` | Toma un objeto JSON con los campos necesarios y añade una nueva observación médica a la base de datos. |
 
 ***
 
@@ -179,7 +179,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
 
 | Parámetro | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
-| `token` | `string` | Extrae el token de la url y procede a validar la cuenta para poder iniciar sesión. |
+| `token` | `string` | Extrae el token de la url (obtenida del correo enviado al momento del registro) y procede a validar la cuenta para poder iniciar sesión. |
 
 
 #### Iniciar el proceso de reinicio de contraseña 
@@ -188,7 +188,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   POST /api/forgot-password
 ```
 
-| Body | Tipo     | Descripción                |
+| Body      | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
 | `{email, rol}` | `json` | Toma el email del usuario, en caso de ser válido se da inicio al cambio de contraseña con el envío de un correo con el token necesario para el proceso. |
 
