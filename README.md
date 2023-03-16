@@ -11,12 +11,12 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
 #### Obtener todos los Pacientes
 
 ```http
-  GET /api/paciente/get
+  GET /api/paciente
 ```
 
 | Parámetro | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
-| `N/A` | `N/A` | Obtiene un array de objetos con todos los pacientes. |
+| `N/A` | `N/A` | Obtiene un array con todos los pacientes. |
 
 #### Crear nuevo Paciente
 
@@ -26,7 +26,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
 
 | Body | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
-| `{identificacion, email, password, telefono}` | `json` | **Obligatorio** Body. |
+| `{identificacion, email, password, telefono}` | `json` | Recibe un objeto *JSON* con los campos necesarios y añade un nuevo paciente a la base de datos. |
 
 #### Iniciar sesión como Paciente 
 
@@ -36,7 +36,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
 
 | Body | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
-| `{identificacion, password}` | `json` | **Obligatorio** Body. |
+| `{identificacion, password}` | `json` | Toma las credenciales de acceso del usuario, en caso de ser válidas retorna un token único. |
 
 #### Actualizar datos del Paciente
 
@@ -44,9 +44,19 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   PATCH /api/paciente/agregar/${id}
 ```
 
-| Parameter | Body     | Token     | Description                       |
+| Parámetro | Body     | Token     | Descripción                       |
 | :-------- | :------- | :-------- | :-------------------------------- |
-| `id`      | `{nombre, direccion, fechaNacimiento}` | `app_key` | **Obligatorio**. Id, el body y el Token de Autenticación |
+| `id`      | `{nombre, direccion, fechaNacimiento}` | `app_key` | Recibe tanto un parámetro *id* como un objeto *JSON*, además de un *Token* de acceso (adquirido en la fase de Login) incluido en el header de la petición. En caso de ser válidos se añadirá o actualizará los campos que no fueron introducidos en la fase de registro. |
+
+#### Obtener las observaciones médicas del Paciente
+
+```http
+  GET /api/paciente/observaciones
+```
+
+| Parámetro | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `N/A` | `N/A` | Obtiene un array con todas las observaciones médicas realizadas al paciente. |
 
 ***
 
@@ -55,12 +65,12 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
 #### Obtener todos los Hospitales
 
 ```http
-  GET /api/hospital/get
+  GET /api/hospital
 ```
 
 | Parámetro | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
-| `N/A` | `N/A` | Obtiene un array de objetos con todos los hospitales. |
+| `N/A` | `N/A` | Obtiene un array con todos los hospitales. |
 
 #### Crear nuevo Hospital
 
@@ -70,7 +80,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
 
 | Body | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
-| `{identificacion, email, password, telefono}` | `json` | **Obligatorio** Body. |
+| `{identificacion, email, password, telefono}` | `json` | Recibe un objeto JSON con los campos necesarios y añade un nuevo hospital a la base de datos. |
 
 #### Iniciar sesión como Hospital 
 
@@ -80,7 +90,7 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
 
 | Body | Tipo     | Descripción                |
 | :-------- | :------- | :------------------------- |
-| `{identificacion, password}` | `json` | **Obligatorio** Body. |
+| `{identificacion, password}` | `json` | Toma las credenciales de acceso del usuario, en caso de ser válidas retorna un token único. |
 
 #### Actualizar datos del Hospital
 
@@ -88,10 +98,108 @@ Proyecto Backend REST API creado con Node.js y PostgreSQL.
   PATCH /api/hospital/agregar/${id}
 ```
 
-| Parameter | Body     | Token     | Description                       |
+| Parámetro | Body     | Token     | Descripción                       |
 | :-------- | :------- | :-------- | :-------------------------------- |
-| `id`      | `{nombre, direccion, servicioMedico}` | `app_key` | **Obligatorio**. Id, el body y el Token de Autenticación |
+| `id`      | `{nombre, direccion, servicioMedico}` | `app_key` | Recibe tanto un parámetro *id* como un objeto *JSON*, además de un *Token* de acceso (adquirido en la fase de Login) incluido en el header de la petición. En caso de ser válidos se añadirá o actualizará los campos que no fueron introducidos en la fase de registro. |
+
+#### Obtener las observaciones médicas del Hospital 
+
+```http
+  GET /api/hospital/observaciones
+```
+
+| Parámetro | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `N/A` | `N/A` | Obtiene un array con todas las observaciones médicas realizadas por el hospital. |
+
+#### Crear un nuevo Médico
+
+```http
+  POST /api/hospital/registro-medico
+```
+
+| Body | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `{identificacion, nombre, email, password, telefono, direccion}` | `json` | Recibe un objeto JSON con los campos necesarios y añade un nuevo médico a la base de datos. |
 
 ***
 
+### Entidad Médico
 
+#### Obtener todos los Médicos
+
+```http
+  GET /api/medico
+```
+
+| Parámetro | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `N/A` | `N/A` | Obtiene un array con todos los médicos. |
+
+
+#### Iniciar sesión como Médico 
+
+```http
+  POST /api/medico/login
+```
+
+| Body | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `{identificacion, password}` | `json` | Toma las credenciales de acceso del usuario, en caso de ser válidas retorna un token único. |
+
+#### Obtener las observaciones médicas del Médico 
+
+```http
+  GET /api/medico/observaciones
+```
+
+| Parámetro | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `N/A` | `N/A` | Obtiene un array con todas las observaciones realizadas por el médico. |
+
+#### Crear Observaciones médicas 
+
+```http
+  POST /api/medico/observaciones
+```
+
+| Body | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `{especialidadMedica, estadoSalud, detalle, idHospital, idMedico, idPaciente}` | `json` | Toma un objeto JSON con los campos necesarios y añade una nueva observación médica a la base de datos. |
+
+***
+
+### Rutas adicionales
+
+#### Validar nuevas cuentas
+
+```http
+  GET /comfirm/${token}
+```
+
+| Parámetro | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `token` | `string` | Extrae el token de la url y procede a validar la cuenta para poder iniciar sesión. |
+
+
+#### Iniciar el proceso de reinicio de contraseña 
+
+```http
+  POST /api/forgot-password
+```
+
+| Body | Tipo     | Descripción                |
+| :-------- | :------- | :------------------------- |
+| `{email, rol}` | `json` | Toma el email del usuario, en caso de ser válido se da inicio al cambio de contraseña con el envío de un correo con el token necesario para el proceso. |
+
+#### Cambiar la contraseña 
+
+```http
+  POST /api/change-password/${token}
+```
+
+| Parámetro | Body     | Tipo     | Descripción                       |
+| :-------- | :------- | :-------- | :-------------------------------- |
+| `token`      | `{password}` | `string/json` | Recibe tanto un parámetro *token* (adquirido mediante la ruta */forgot-password*), como un objeto *JSON*, en caso de ser válidos se actualiza la nueva contraseña. |
+
+***
